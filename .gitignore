@@ -1,0 +1,26 @@
+# Dataset (license-restricted, large) — never commit
+data/*
+!data/README.md
+data/DB2_*/
+data/*.mat
+
+# Derived feature cache (also NinaPro-derived — keep it local)
+artifacts/feat_s*.npz
+artifacts/confusion_matrix_*.npz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

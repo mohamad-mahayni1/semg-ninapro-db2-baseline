@@ -1,0 +1,208 @@
+{
+  "with_rest": {
+    "task": "DB2 Exercise 1 cross-subject classification",
+    "model": "LDA(lsqr, shrinkage=auto)",
+    "train_subjects": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "test_subjects": [
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "drop_rest": false,
+    "n_classes": 18,
+    "n_train_windows": 85973,
+    "n_test_windows": 43016,
+    "feature_dim": 72,
+    "macro_f1": 0.23165201603415606,
+    "macro_f1_bootstrap_95ci": [
+      0.2265,
+      0.237
+    ],
+    "weighted_f1": 0.44101284470729823,
+    "accuracy": 0.5055328249953506,
+    "per_subject_test": {
+      "S11": {
+        "n_windows": 8615,
+        "macro_f1": 0.1115,
+        "accuracy": 0.3038
+      },
+      "S12": {
+        "n_windows": 8578,
+        "macro_f1": 0.2608,
+        "accuracy": 0.5318
+      },
+      "S13": {
+        "n_windows": 8597,
+        "macro_f1": 0.1909,
+        "accuracy": 0.4917
+      },
+      "S14": {
+        "n_windows": 8613,
+        "macro_f1": 0.2987,
+        "accuracy": 0.5543
+      },
+      "S15": {
+        "n_windows": 8613,
+        "macro_f1": 0.3428,
+        "accuracy": 0.6462
+      }
+    },
+    "train_class_counts": {
+      "0": 43735,
+      "1": 3598,
+      "2": 2948,
+      "3": 2581,
+      "4": 2491,
+      "5": 2178,
+      "6": 2071,
+      "7": 3406,
+      "8": 2524,
+      "9": 2610,
+      "10": 2500,
+      "11": 2662,
+      "12": 2305,
+      "13": 1936,
+      "14": 1832,
+      "15": 2310,
+      "16": 2333,
+      "17": 1953
+    },
+    "test_class_counts": {
+      "0": 19844,
+      "1": 1828,
+      "2": 1549,
+      "3": 1282,
+      "4": 1454,
+      "5": 1407,
+      "6": 1201,
+      "7": 1660,
+      "8": 1350,
+      "9": 1528,
+      "10": 1563,
+      "11": 1482,
+      "12": 1202,
+      "13": 981,
+      "14": 1098,
+      "15": 1318,
+      "16": 1212,
+      "17": 1057
+    },
+    "elapsed_sec": 11.90233325958252,
+    "headline": "NinaPro DB2 Exercise 1, train S1-S10 / test S11-S15 (subject-disjoint), N_classes=18, drop_rest=False, macro-F1=0.232 (95% CI [0.227, 0.237]). Single-fit cross-subject baseline; performance is NOT the primary criterion."
+  },
+  "without_rest": {
+    "task": "DB2 Exercise 1 cross-subject classification",
+    "model": "LDA(lsqr, shrinkage=auto)",
+    "train_subjects": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "test_subjects": [
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "drop_rest": true,
+    "n_classes": 17,
+    "n_train_windows": 42238,
+    "n_test_windows": 23172,
+    "feature_dim": 72,
+    "macro_f1": 0.21173527642576884,
+    "macro_f1_bootstrap_95ci": [
+      0.2066,
+      0.2168
+    ],
+    "weighted_f1": 0.20503134167551548,
+    "accuracy": 0.21897117210426376,
+    "per_subject_test": {
+      "S11": {
+        "n_windows": 6410,
+        "macro_f1": 0.1251,
+        "accuracy": 0.1618
+      },
+      "S12": {
+        "n_windows": 4642,
+        "macro_f1": 0.2475,
+        "accuracy": 0.2482
+      },
+      "S13": {
+        "n_windows": 3523,
+        "macro_f1": 0.1723,
+        "accuracy": 0.2183
+      },
+      "S14": {
+        "n_windows": 4633,
+        "macro_f1": 0.2081,
+        "accuracy": 0.1761
+      },
+      "S15": {
+        "n_windows": 3964,
+        "macro_f1": 0.3329,
+        "accuracy": 0.328
+      }
+    },
+    "train_class_counts": {
+      "1": 3598,
+      "2": 2948,
+      "3": 2581,
+      "4": 2491,
+      "5": 2178,
+      "6": 2071,
+      "7": 3406,
+      "8": 2524,
+      "9": 2610,
+      "10": 2500,
+      "11": 2662,
+      "12": 2305,
+      "13": 1936,
+      "14": 1832,
+      "15": 2310,
+      "16": 2333,
+      "17": 1953
+    },
+    "test_class_counts": {
+      "1": 1828,
+      "2": 1549,
+      "3": 1282,
+      "4": 1454,
+      "5": 1407,
+      "6": 1201,
+      "7": 1660,
+      "8": 1350,
+      "9": 1528,
+      "10": 1563,
+      "11": 1482,
+      "12": 1202,
+      "13": 981,
+      "14": 1098,
+      "15": 1318,
+      "16": 1212,
+      "17": 1057
+    },
+    "elapsed_sec": 2.6884353160858154,
+    "headline": "NinaPro DB2 Exercise 1, train S1-S10 / test S11-S15 (subject-disjoint), N_classes=17, drop_rest=True, macro-F1=0.212 (95% CI [0.207, 0.217]). Single-fit cross-subject baseline; performance is NOT the primary criterion."
+  }
+}
