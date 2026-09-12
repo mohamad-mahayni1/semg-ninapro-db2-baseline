@@ -22,7 +22,7 @@ absolute number, is the point of the repository.
 
 ## Why it is built this way
 
-Peak accuracy is not the deliverable. Three things are:
+Peak accuracy is not the goal. Three things are:
 
 1. **Every choice is stated and defensible** — window length, feature set, label source, and why a
    shrinkage-LDA is the right yardstick before anything deeper is allowed to claim value.
@@ -33,7 +33,7 @@ Peak accuracy is not the deliverable. Three things are:
 
 ## Ablations
 
-Two questions a product team would actually ask, answered with numbers rather than opinion:
+Two design questions I set myself before trusting any model, answered with numbers rather than opinion:
 
 - **How many electrodes are needed?** 8 spaced electrodes retain **92 %** of full performance at
   two thirds of the channel count; layout beats anatomical targeting at low channel counts

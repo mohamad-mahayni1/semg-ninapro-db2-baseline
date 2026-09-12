@@ -2,10 +2,10 @@
 Supporting experiments: electrode-count ablation and feature-block ablation.
 Reuses cached per-subject features from src/baseline.py (artifacts/feat_s*.npz).
 
-Electrode ablation answers product question Q1 ("how many electrodes?") with concrete numbers
+Electrode ablation answers design question Q1 ("how many electrodes?") with concrete numbers
 under the same subject-disjoint split.
 
-Feature ablation answers product question Q2 ("which features are most relevant?") by removing
+Feature ablation answers design question Q2 ("which features are most relevant?") by removing
 each of the 6 time-domain feature blocks and measuring the macro-F1 drop.
 """
 from __future__ import annotations
