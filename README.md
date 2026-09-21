@@ -50,6 +50,7 @@ notebook.ipynb     light walkthrough; calls into src/
 src/baseline.py    end-to-end pipeline: load -> filter -> window -> features -> LDA
 src/ablation.py    electrode-count and feature-block ablations
 artifacts/         metrics and the confusion-matrix figure (feature caches are gitignored)
+systemc/           SystemC model of the 18 x 72 inference block, one MAC per cycle (1,296 cycles/decision)
 data/              NinaPro DB2 .mat files — not redistributed, see data/README.md
 ```
 
@@ -65,6 +66,14 @@ python src/ablation.py
 
 First run extracts features for every subject (≈5–8 min on a laptop CPU) and caches them; later
 runs finish in seconds.
+
+## Hardware view
+
+`systemc/` models the classifier as a dedicated block: 1,296 cycles per decision at one
+multiply-accumulate per cycle. That is roughly what a Cortex-M4 needs in software, so the
+case for a block is energy per operation and core sleep time, not cycles — and the classifier
+is the cheapest stage of the chain; filtering and features run at the sample rate. See
+[`systemc/README.md`](systemc/README.md).
 
 ## Limits I am not hiding
 
