@@ -1,22 +1,22 @@
 // lda_block_energy.cpp
 // Third version of the sEMG inference block (baseline: lda_block.cpp, fixed point +
-// parallel MAC units: lda_block_fx4.cpp). This one adds an ENERGY SKETCH.
+// parallel MAC units: lda_block_fx4.cpp). This one adds an ENERGY SKETCH and compares
+// three dataflows -- three answers to "what sits next to the multiplier".
 //
-// The model counts events and prices them:
-//   E_MAC       energy of one 16-bit multiply-accumulate in the datapath
-//   E_FETCH_EXT energy of fetching one weight from external / off-block memory
-//   E_FETCH_INT energy of fetching one weight from a small on-block buffer
-//   E_LEAK      static energy per cycle (leakage, clock tree), per MAC unit
+//   DATAFLOW = 0   nothing held on-block. Every product fetches both its weight and its
+//                  input from far memory. 2,592 far reads per decision.
+//   DATAFLOW = 1   input-stationary. The 72 features are loaded once into an on-block
+//                  register file and read from there 18 times. Weights still come from far
+//                  memory, because within one decision each weight is used exactly once.
+//   DATAFLOW = 2   weight- and input-stationary. The 1,296 weights never change after
+//                  training, so they are loaded once at power-up (amortised over
+//                  DECISIONS_PER_LOAD decisions) and read from on-block memory thereafter.
+//                  1,296 weights x 2 bytes = 2.6 kB, which fits on-chip.
 //
-// THE CONSTANTS ARE RATIOS, NOT JOULES. They express one well-established fact:
-// moving a word of data costs more than multiplying it, and moving it from far away
-// costs much more than from near by (Horowitz, ISSCC 2014, "Computing's energy problem").
-// Absolute numbers would need a real technology library and a real memory macro.
-//
-// Two weight-reuse schemes are compared at the same MAC_UNITS:
-//   STATIONARY = 0  every product fetches its weight from external memory   (naive)
-//   STATIONARY = 1  the 72 inputs are loaded once into a register file, and each weight
-//                   is still fetched once, but inputs are reused across all 18 outputs
+// The constants are RATIOS, NOT JOULES. They encode one established fact: moving a word
+// costs more than multiplying it, and moving it from far away costs much more than from a
+// register file beside the multiplier (Horowitz, ISSCC 2014). Absolute numbers would need a
+// technology library and a real memory macro.
 
 #define SC_INCLUDE_FX
 #include <systemc.h>
@@ -27,13 +27,18 @@ static const int N_OUT = 18;   // 17 gestures + rest
 #ifndef MAC_UNITS
 #define MAC_UNITS 4
 #endif
-#ifndef STATIONARY
-#define STATIONARY 0
+#ifndef DATAFLOW
+#define DATAFLOW 0
+#endif
+// How many decisions one weight load serves. The weights are fixed after training, so in a
+// real device this is "every decision until the battery dies"; 1 shows the worst case.
+#ifndef DECISIONS_PER_LOAD
+#define DECISIONS_PER_LOAD 1
 #endif
 
 // --- energy model, in arbitrary units (see the note above) -------------------
 static const double E_MAC       = 1.0;    // one 16-bit multiply-accumulate
-static const double E_FETCH_EXT = 5.0;    // one weight read from off-block memory
+static const double E_FETCH_EXT = 5.0;    // one read from off-block memory
 static const double E_FETCH_INT = 0.5;    // one read from an on-block register file
 static const double E_LEAK      = 0.05;   // per cycle, per MAC unit
 
@@ -51,7 +56,8 @@ SC_MODULE(LdaBlockEnergy) {
     fx_t  x[N_IN];
     acc_t y[N_OUT];
 
-    unsigned long cycles = 0, macs = 0, fetch_ext = 0, fetch_int = 0;
+    unsigned long cycles = 0, macs = 0, fetch_int = 0;
+    double fetch_ext = 0.0;   // fractional: a one-off weight load is spread over decisions
 
     double energy() const {
         return macs * E_MAC
@@ -66,10 +72,14 @@ SC_MODULE(LdaBlockEnergy) {
             wait();
             if (!start.read()) continue;
 
-#if STATIONARY
-            // inputs loaded once into an on-block register file, then reused 18 times
-            for (int i = 0; i < N_IN; ++i) ++fetch_ext;      // x[] read once from outside
-            wait(); ++cycles;                                 // one cycle for the load burst
+#if DATAFLOW == 2
+            // one-off weight load into on-block memory, charged pro rata to this decision
+            fetch_ext += double(N_OUT * N_IN) / DECISIONS_PER_LOAD;
+            wait(); ++cycles;                         // one cycle for the load burst
+#endif
+#if DATAFLOW >= 1
+            for (int i = 0; i < N_IN; ++i) fetch_ext += 1.0;   // the 72 features, once
+            wait(); ++cycles;
 #endif
             for (int o = 0; o < N_OUT; ++o) {
                 acc_t acc = b[o];
@@ -77,11 +87,15 @@ SC_MODULE(LdaBlockEnergy) {
                     for (int k = 0; k < MAC_UNITS && i + k < N_IN; ++k) {
                         acc += W[o][i + k] * x[i + k];
                         ++macs;
-                        ++fetch_ext;                          // the weight itself: always external
-#if STATIONARY
-                        ++fetch_int;                          // the input: cheap, from the buffer
+#if DATAFLOW == 2
+                        ++fetch_int;                  // weight: on-block
+                        ++fetch_int;                  // input:  on-block
+#elif DATAFLOW == 1
+                        fetch_ext += 1.0;             // weight: far
+                        ++fetch_int;                  // input:  on-block
 #else
-                        ++fetch_ext;                          // the input: re-read from outside
+                        fetch_ext += 1.0;             // weight: far
+                        fetch_ext += 1.0;             // input:  far
 #endif
                     }
                     wait(); ++cycles;
@@ -126,15 +140,17 @@ int sc_main(int, char**) {
     start.write(false);
     while (!done.read()) sc_start(12.5, SC_NS);
 
+    const char* name[3] = {"none", "input-stationary", "weight+input-stationary"};
     std::cout << std::fixed << std::setprecision(1)
-              << "MAC_UNITS = "  << MAC_UNITS
-              << "  STATIONARY = " << STATIONARY
-              << "  class = "     << argmax.read()
-              << "  cycles = "    << dut.cycles
-              << "  macs = "      << dut.macs
-              << "  fetch_ext = " << dut.fetch_ext
-              << "  fetch_int = " << dut.fetch_int
-              << "  energy = "    << dut.energy() << " units"
+              << "dataflow = " << name[DATAFLOW]
+              << "  mac_units = "  << MAC_UNITS
+              << "  loads/1 = "    << DECISIONS_PER_LOAD
+              << "  class = "      << argmax.read()
+              << "  cycles = "     << dut.cycles
+              << "  macs = "       << dut.macs
+              << "  far = "        << dut.fetch_ext
+              << "  near = "       << dut.fetch_int
+              << "  energy = "     << dut.energy()
               << std::endl;
     return 0;
 }

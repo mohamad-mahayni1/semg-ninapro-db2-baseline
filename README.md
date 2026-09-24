@@ -69,14 +69,17 @@ runs finish in seconds.
 
 ## Hardware view
 
-`systemc/` models the classifier as a dedicated block. Three findings, all from running code:
+`systemc/` models the classifier as a dedicated block. Four findings, all from running code:
 
 1. **Parallelism buys latency, not energy.** Eight MAC units are eight times faster than one
    (162 vs 1,296 cycles) at identical energy — the multipliers were never the expensive part.
 2. **Data movement is 90% of it.** Fetching weights and inputs dominates; the 1,296 multiplies
-   are 9%. Holding the input vector on-block instead of re-reading it per output cuts energy
+   are 9%. Holding the 72 features on-block instead of re-reading them per class cuts energy
    by 38% and costs one cycle.
-3. **A Cortex-M4 does the same work in about the same cycles** (single-cycle MAC), so the case
+3. **Keeping the weights on-block too takes it to −79%** — they are fixed after training, and
+   2.6 kB fits on-chip. But caching is not free: with one decision per load it is *worse* than
+   caching the features alone. Break-even is two decisions.
+4. **A Cortex-M4 does the same work in about the same cycles** (single-cycle MAC), so the case
    for a block is energy per operation and core sleep time, not speed.
 
 The classifier is also the cheapest stage of the chain — filtering and features run at the
